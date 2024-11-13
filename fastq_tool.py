@@ -7,9 +7,11 @@ from modules.dna_rna_tools_extended import (
     reverse_complement_seq,
 )
 from modules.filter_fastq_extended import (
-    if_gc_bounds_OK,
-    if_length_bounds_OK,
-    if_quality_threshold_OK,
+    if_gc_bounds_ok,
+    if_length_bounds_ok,
+    if_quality_threshold_ok,
+    read_fastq,
+    write_new_fastq,
 )
 
 from typing import Union
@@ -67,16 +69,16 @@ def run_dna_rna_tools(*args: str) -> Union[str, list]:
 
 
 def filter_fastq(
-    seqs: dict,
+    input_fastq: str,
+    output_fastq: str,
     gc_bounds: Union[tuple, int, float] = (0, 100),
     length_bounds: Union[tuple, int] = (0, 2**32),
     quality_threshold: Union[float, int] = 0,
 ):
     """Function filter_fastq
     Args:
-        seqs (dict) - dictionary of FASTQ sequences (srt) and its quality (str)
-            View: seqs = {"name1":["DNA-seq1", "Quality-DNA-seq1"],
-                          "name2":["DNA-seq2", "Quality-DNA-seq2"], ...}
+        input_fastq (str) - path to fastq file
+        output_fastq (str) - path (and name) to resulting fastq file
         gc_bounds (tuple) - limit bounds for GC% (default: (0,100));
         if only one specified, it will be accepted as upper bound
         length_bounds (tuple) - limit bounds for read length
@@ -84,8 +86,11 @@ def filter_fastq(
             if only one specified, it will be accepted as upper bound
         quality_threshold (float) - limit of
             mean read quality score (phred33) (default: 0)
-    Returns: dictionary of FASTQ sequences satisfying all conditions
+    Returns: None
+    Create new file with filtered reads (output_fastq)
     """
+
+    seqs = read_fastq(input_fastq)
 
     result = dict()
 
@@ -99,11 +104,12 @@ def filter_fastq(
     for seq_name_i in seq_names:
         seq_ = seqs[f"{seq_name_i}"][0]
         seq_q = seqs[f"{seq_name_i}"][1]
+        seq_q_id = seqs[f"{seq_name_i}"][2]
         if (
-            if_gc_bounds_OK(seq_, gc_bounds)
-            and if_length_bounds_OK(seq_, length_bounds)
-            and if_quality_threshold_OK(seq_q, quality_threshold)
+            if_gc_bounds_ok(seq_, gc_bounds)
+            and if_length_bounds_ok(seq_, length_bounds)
+            and if_quality_threshold_ok(seq_q, quality_threshold)
         ):
-            result[f"{seq_name_i}"] = (seq_, seq_q)
+            result[f"{seq_name_i}"] = (seq_, seq_q, seq_q_id)
 
-    return result
+    write_new_fastq(output_fastq, result)
