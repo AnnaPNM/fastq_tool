@@ -6,7 +6,7 @@ Upd: In the last release new features were added, errors were corrected, the cod
 ## New classes: `RNASequence`, `DNASequence`, `AminoAcidSequence`
 Different procedures for DNA/RNA/aminoacid sequences are avaliable now in more convinient format!
 
-**Avaliable methods for objects of `RNASequence` and `DNASequence` classes:**:
+**Avaliable methods for objects of `RNASequence` and `DNASequence` classes:**
 - `is_correct_seq`: Check if all letters of your sequense are relevant to particular type of biological sequence
 - `reverse`: Returns reverse sequence
 - `complement`: Returns complement sequence
@@ -15,7 +15,7 @@ Different procedures for DNA/RNA/aminoacid sequences are avaliable now in more c
 ***Additional option for object of `DNASequence` class:***
 - `transcribe`: Return transcribed RNA sequence (object of `RNASequence` class)
 
-**Avaliable methods for objects of `AminoAcidSequence` class:**:
+**Avaliable methods for objects of `AminoAcidSequence` class:**
 - `get_mass_dalton`: Returns molecular mass of given amino-acid sequence in Daltons
 
 ### Example:
