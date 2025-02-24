@@ -1,33 +1,44 @@
-# fastq_tool
+# fastq_tool (release from February 2025)
 Module contains all basic procedures which could be useful in work with DNA/RNA sequences
 
-## `run_dna_rna_tools`
-Different converting procedures for DNA/RNA sequences
+Upd: In the last release new features were added, errors were corrected, the code was improved and optimized
 
-**Avaliable procedures**:
-- transcribe (return transcribed sequences)
-- reverse (return reverse sequences)
-- complement (return complement sequences)
-- reverse_complement (return reverse complement sequences)
+## New classes: `RNASequence`, `DNASequence`, `AminoAcidSequence`
+Different procedures for DNA/RNA/aminoacid sequences are avaliable now in more convinient format!
 
-Function accepts any number of DNA/RNA sequences as arguments, *last argument must be the name of procedure*
-Function accepts both letter registers
+**Avaliable methods for objects of `RNASequence` and `DNASequence` classes:**:
+- `is_correct_seq`: Check if all letters of your sequense are relevant to particular type of biological sequence
+- `reverse`: Returns reverse sequence
+- `complement`: Returns complement sequence
+- `reverse_complement`: Return reverse complement sequence
 
-`run_dna_rna_tools` returns a **list** of succesfully processed sequences (if resulting list contains only one element, function returns this element as **str** type)
+***Additional option for object of `DNASequence` class:***
+- `transcribe`: Return transcribed RNA sequence (object of `RNASequence` class)
+
+**Avaliable methods for objects of `AminoAcidSequence` class:**:
+- `get_mass_dalton`: Returns molecular mass of given amino-acid sequence in Daltons
 
 ### Example:
 ```
-run_dna_rna_tools ("AUG", "AAT", "GCCATTT", "reverse")
+seq1 = DNASequence('ACGGGGTTT')
+seq2 = seq1.reverse_complement()
+seq3 = seq1.transcribe()
+
+print(seq2)
+print(seq3)
 ```
 Output:
-> All possible procedures were done
+> AAACCCCGT
 > 
-> ['GUA', 'TAA', 'TTTACCG']
+> UGCCCCAAA
+
 
 
 
 ## `filter_fastq`
 Checks the quality of FASTQ reads and filter it
+
+Upd: In the last release errors were corrected, the code was improved and optimized. Now working time of the function is significantly lower due to `BioPython` package usage!
 
 **Arguments**:
 - input_fastq (str) - path to the input fastq file
@@ -40,8 +51,9 @@ Checks the quality of FASTQ reads and filter it
 
 ### Usage:
 ```
-filter_fastq (input_fastq = "file.fastq", gc_bounds = (80), length_bounds = (50, 100), quality_threshold = 32)
+filter_fastq (input_fastq = "file.fastq", gc_bounds = 80, length_bounds = (50, 100), quality_threshold = 32)
 ```
+
 
 
 # bio_files_processor
