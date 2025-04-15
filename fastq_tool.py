@@ -1,71 +1,213 @@
-from modules.dna_rna_tools_extended import (
-    is_dna,
-    is_rna,
-    transcribe_seq,
-    reverse_seq,
-    complement_seq,
-    reverse_complement_seq,
-)
-from modules.filter_fastq_extended import (
-    if_gc_bounds_ok,
-    if_length_bounds_ok,
-    if_quality_threshold_ok,
-    read_fastq,
-    write_new_fastq,
-)
-
+from abc import ABC, abstractmethod
 from typing import Union
 
+import Bio
+from Bio import SeqIO
+from Bio import SeqUtils
+from Bio.SeqRecord import SeqRecord
 
-def run_dna_rna_tools(*args: str) -> Union[str, list]:
-    """Function run_dna_rna_tools
-    Args: DNA/RNA sequences (str),
-    last argument - name of procedure of interest (str)
-        Possible procedures:
-            transcribe - return transcribed sequences
-            reverse - return reverse sequences
-            complement - return complement sequences
-            reverse_complement - return reverse complement sequences
-    Returns:
-        If all the sequences were succesfully processed,
-        run_dna_rna_tools returns a list of them
-        If resulting list contains only one element,
-        run_dna_rna_tools returns this element as str type
-    """
-    procedure = args[-1]
-    args_seq = args[: len(args) - 1]
-    result = []
 
-    if procedure == "transcribe":
-        for seq_ in args_seq:
-            if is_dna(seq_) or is_rna(seq_):
-                result.append(transcribe_seq(seq_))
+class BiologicalSequence(ABC):
+    @abstractmethod
+    def __len__(self):
+        pass
 
-    elif procedure == "reverse":
-        for seq_ in args_seq:
-            if is_dna(seq_) or is_rna(seq_):
-                result.append(reverse_seq(seq_))
+    @abstractmethod
+    def __getitem__(self):
+        pass
 
-    elif procedure == "complement":
-        for seq_ in args_seq:
-            if is_dna(seq_) or is_rna(seq_):
-                result.append(complement_seq(seq_))
+    @abstractmethod
+    def __repr__(self):
+        pass
 
-    elif procedure == "reverse_complement":
-        for seq_ in args_seq:
-            if is_dna(seq_) or is_rna(seq_):
-                result.append(reverse_complement_seq(seq_))
-    else:
-        print("Unknown procedure:", procedure, "!!!")
+    @abstractmethod
+    def __str__(self):
+        pass
 
-    if result == []:
-        print("All arguments are not DNA/RNA")
-    else:
-        print("All possible procedures were done")
-        if len(result) == 1:
-            return result[0]
+    @abstractmethod
+    def is_correct_seq(self):
+        pass
+
+
+class NucleicAcidSequence(BiologicalSequence):
+    def __init__(self, sequence: str):
+        self.sequence = sequence
+
+    def __len__(self):
+        return len(self.sequence)
+
+    def __getitem__(self, val):
+        return self.sequence[val]
+
+    def __repr__(self):
+        return f"NucleicAcidSequence {self.sequence}"
+
+    def __str__(self):
+        return str(self.sequence)
+
+    def is_correct_seq(self):
+        return set(self.sequence) <= {"A", "T", "C", "G", "U", "a", "t", "c", "g", "u"}
+
+    def complement(self):
+        res = []
+        list_seq = list(self.sequence)
+
+        if "U" in list_seq or "u" in list_seq:
+            complement_list = {
+                "A": "U",
+                "U": "A",
+                "C": "G",
+                "G": "C",
+                "a": "u",
+                "u": "a",
+                "c": "g",
+                "g": "c",
+            }
         else:
-            return result
+            complement_list = {
+                "A": "T",
+                "T": "A",
+                "C": "G",
+                "G": "C",
+                "a": "t",
+                "t": "a",
+                "c": "g",
+                "g": "c",
+            }
+
+        for nucl in list_seq:
+            res.append(complement_list[nucl])
+
+        return self.__class__("".join(res))
+
+    def reverse(self):
+        res = []
+        list_seq = list(self.sequence)
+        for i in range(len(list_seq) - 1, -1, -1):
+            res.append(list_seq[i])
+        return self.__class__("".join(res))
+
+    def reverse_complement(self):
+        return self.__class__((self.complement()).reverse())
+
+
+class RNASequence(NucleicAcidSequence):
+    pass
+
+
+class DNASequence(NucleicAcidSequence):
+    def transcribe(self):
+        res = []
+        list_seq = list(self.sequence)
+
+        DNA_to_RNA = {
+            "A": "U",
+            "T": "A",
+            "C": "G",
+            "G": "C",
+            "a": "u",
+            "t": "a",
+            "c": "g",
+            "g": "c",
+        }
+
+        for nucl in list_seq:
+            res.append(DNA_to_RNA[nucl])
+        return RNASequence("".join(res))
+
+
+class AminoAcidSequence(BiologicalSequence):
+    def __init__(self, sequence: str):
+        self.sequence = sequence
+
+    def __len__(self):
+        return len(self.sequence)
+
+    def __getitem__(self, val):
+        return self.sequence[val]
+
+    def __repr__(self):
+        return f"AminoAcidSequence {self.sequence}"
+
+    def __str__(self):
+        return str(self.sequence)
+
+    def is_correct_seq(self):
+        return set(self.sequence) <= {
+            "A",
+            "R",
+            "N",
+            "D",
+            "C",
+            "E",
+            "Q",
+            "G",
+            "H",
+            "I",
+            "L",
+            "K",
+            "M",
+            "F",
+            "P",
+            "S",
+            "T",
+            "W",
+            "Y",
+            "V",
+            "a",
+            "r",
+            "n",
+            "d",
+            "c",
+            "e",
+            "q",
+            "g",
+            "h",
+            "i",
+            "l",
+            "k",
+            "m",
+            "f",
+            "p",
+            "s",
+            "t",
+            "w",
+            "y",
+            "v",
+        }
+
+    def get_mass_dalton(self):
+        """Method get_mass_dalton()
+        Returns molecular mass of given amino-acid sequence in Daltons
+        """
+
+        mass = 0
+        amino_acid_weights = {
+            "A": 89.09,  # Alanine
+            "R": 174.20,  # Arginine
+            "N": 132.12,  # Asparagine
+            "D": 133.10,  # Aspartic acid
+            "C": 121.15,  # Cysteine
+            "E": 147.13,  # Glutamic acid
+            "Q": 146.14,  # Glutamine
+            "G": 75.07,  # Glycine
+            "H": 155.16,  # Histidine
+            "I": 131.17,  # Isoleucine
+            "L": 131.17,  # Leucine
+            "K": 146.19,  # Lysine
+            "M": 149.21,  # Methionine
+            "F": 165.19,  # Phenylalanine
+            "P": 115.13,  # Proline
+            "S": 105.09,  # Serine
+            "T": 119.12,  # Threonine
+            "W": 204.23,  # Tryptophan
+            "Y": 181.19,  # Tyrosine
+            "V": 117.15,
+        }  # Valine
+        for acid in list(self.sequence):
+            mass += amino_acid_weights[acid]
+
+        return mass
 
 
 def filter_fastq(
@@ -90,26 +232,27 @@ def filter_fastq(
     Create new file with filtered reads (output_fastq)
     """
 
-    seqs = read_fastq(input_fastq)
+    seqs = SeqIO.parse(input_fastq, "fastq")
 
-    result = dict()
+    result = []
 
-    seq_names = list(seqs.keys())
-
-    if type(gc_bounds) != tuple:
+    if not (isinstance(gc_bounds, tuple)):
         gc_bounds = (0, gc_bounds)
-    if type(length_bounds) != tuple:
+    if not (isinstance(length_bounds, tuple)):
         length_bounds = (0, length_bounds)
 
-    for seq_name_i in seq_names:
-        seq_ = seqs[f"{seq_name_i}"][0]
-        seq_q = seqs[f"{seq_name_i}"][1]
-        seq_q_id = seqs[f"{seq_name_i}"][2]
-        if (
-            if_gc_bounds_ok(seq_, gc_bounds)
-            and if_length_bounds_ok(seq_, length_bounds)
-            and if_quality_threshold_ok(seq_q, quality_threshold)
-        ):
-            result[f"{seq_name_i}"] = (seq_, seq_q, seq_q_id)
+    for seq_ in seqs:
+        mean_quality = sum(seq_.letter_annotations["phred_quality"]) / len(
+            seq_.letter_annotations["phred_quality"]
+        )
+        gc_content = SeqUtils.gc_fraction(seq_.seq) * 100
+        seq_length = len(seq_.seq)
 
-    write_new_fastq(output_fastq, result)
+        if (
+            mean_quality >= quality_threshold
+            and gc_bounds[0] <= gc_content <= gc_bounds[1]
+            and length_bounds[0] <= seq_length <= length_bounds[1]
+        ):
+            result.append(SeqRecord(seq_.seq, id=seq_.id, description=seq_.description))
+
+    SeqIO.write(result, output_fastq, "fasta")
