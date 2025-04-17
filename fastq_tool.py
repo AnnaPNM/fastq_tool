@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Union
+import argparse
+import logging
 
 import Bio
 from Bio import SeqIO
@@ -256,3 +258,120 @@ def filter_fastq(
             result.append(SeqRecord(seq_.seq, id=seq_.id, description=seq_.description))
 
     SeqIO.write(result, output_fastq, "fasta")
+
+
+def parse_bounds(s):
+    parts = list(map(int, s.strip("()").split(", ")))
+    return tuple(parts) if len(parts) > 1 else parts[0]
+
+
+# parser = argparse.ArgumentParser(
+#                    prog='fastq_tool parser',
+#                    description='This tool is needed to work with fastq_tool using command line arguments',
+#                    epilog='Write to our email if you have questions!')
+#
+#
+# parser.add_argument('-i', '--input_fastq', required=True, help='Path to the input fastq file (required)')
+# parser.add_argument('-o', '--output_fastq', required=True, help='Path to the output fastq file (required)')
+# parser.add_argument('-g', '--gc_bounds', type=parse_bounds, default=(0, 100),
+#                    help='Limit bounds for GC% as "min,max" or "max" (default: (0,100))')
+# parser.add_argument('-l', '--length_bounds', type=parse_bounds, default=(0, 2**32),
+#                    help='Limit bounds for read length as "min,max" or "max" (default: (0, 2**32))')
+# parser.add_argument('-q', '--quality_threshold', type=int, default=0,
+#                    help="Limit of mean read quality score (phred33) (default: 0)")
+#
+# args = parser.parse_args()
+
+
+def main():
+    logging.basicConfig(
+        level=logging.INFO,  # Logs INFO, WARNING, ERROR, and CRITICAL messages.
+        format="%(asctime)s [%(levelname)s] - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[
+            logging.FileHandler("fastq_tool.log", mode="w"),
+            logging.StreamHandler(),
+        ],
+    )
+
+    logger = logging.getLogger("fastq_tool")
+    logger.info("------ Starting the FASTQ processing ------")
+
+    parser = argparse.ArgumentParser(
+        prog="fastq_tool parser",
+        description="This tool is needed to work with fastq_tool using command line arguments",
+        epilog="Write to our email if you have questions!",
+    )
+    parser.add_argument(
+        "-i", "--input_fastq", required=True, help="Path to input fastq"
+    )
+    parser.add_argument(
+        "-o", "--output_fastq", required=True, help="Path to output fastq"
+    )
+    parser.add_argument(
+        "-g",
+        "--gc_bounds",
+        type=parse_bounds,
+        default=(0, 100),
+        help="Limit bounds for GC%% (default: (0,100))",
+    )
+    parser.add_argument(
+        "-l",
+        "--length_bounds",
+        type=parse_bounds,
+        default=(0, 2**32),
+        help="Limit bounds for read length (default: (0,2**32))",
+    )
+    parser.add_argument(
+        "-q",
+        "--quality_threshold",
+        type=int,
+        default=0,
+        help="Limit of mean read quality score (default: 0)",
+    )
+
+    args = parser.parse_args()
+
+    try:
+        filter_fastq(
+            input_fastq=args.input_fastq,
+            output_fastq=args.output_fastq,
+            gc_bounds=args.gc_bounds,
+            length_bounds=args.length_bounds,
+            quality_threshold=args.quality_threshold,
+        )
+    except Exception as e:
+        logger.error(f"------ ERROR ------ {type(e).__name__}: {e}")
+
+
+if __name__ == "__main__":
+    main()
+
+
+# logging.basicConfig(
+#    level=logging.INFO,  # Logs INFO, WARNING, ERROR, and CRITICAL messages.
+#    format='%(asctime)s [%(levelname)s] - %(message)s',
+#    datefmt='%Y-%m-%d %H:%M:%S',
+#    handlers=[
+#        logging.FileHandler("fastq_tool.log", mode='w'),
+#        logging.StreamHandler()
+#    ]
+# )
+#
+# logger = logging.getLogger("fastq_tool")
+# logger.info(f"------ Starting the FASTQ processing ------")
+#
+# try:
+#    with open(args.input_fastq, "r") as f:
+#        data = f.read()
+# except Exception as e:
+#    logger.error(f"------ ERROR ------ \n {type(e).__name__}, {e}")
+
+
+# filter_fastq(
+#        input_fastq=args.input_fastq,
+#        output_fastq=args.output_fastq,
+#        gc_bounds=args.gc_bounds,
+#        length_bounds=args.length_bounds,
+#        quality_threshold=int(args.quality_threshold)
+#    )

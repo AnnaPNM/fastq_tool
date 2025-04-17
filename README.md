@@ -1,7 +1,9 @@
-# fastq_tool (release from February 2025)
+# fastq_tool (release from April 2025)
 Module contains all basic procedures which could be useful in work with DNA/RNA sequences
 
-Upd: In the last release new features were added, errors were corrected, the code was improved and optimized
+In the release from February 2025 new features were added, errors were corrected, the code was improved and optimized
+
+UPD: In the current release possibility to run `fastq_tool` from command line is added, also logging and testing procedures were performed
 
 ## New classes: `RNASequence`, `DNASequence`, `AminoAcidSequence`
 Different procedures for DNA/RNA/aminoacid sequences are avaliable now in more convinient format!
