@@ -1,0 +1,2 @@
+2025-04-17 11:18:20 [INFO] - ------ Starting the FASTQ processing ------
+2025-04-17 11:18:20 [ERROR] - ------ ERROR ------ FileNotFoundError: [Errno 2] No such file or directory: 'not_existing_fastq.fastq'
